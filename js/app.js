@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (targetTab === 'tab-pegawai') {
                     activeSectionTitle.textContent = 'Kelola Data Pegawai';
                 } else {
-                    activeSectionTitle.textContent = 'Buat SPPD';
+                    activeSectionTitle.textContent = 'Buat Visum';
                 }
             }
 
@@ -950,9 +950,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (docs.length === 0) {
             grid.innerHTML = `
                 <div class="sppd-empty-state">
-                    <div class="sppd-empty-title">Belum Ada Dokumen SPPD</div>
-                    <div class="sppd-empty-desc">Silakan buat dokumen SPPD pertama Anda dengan menekan tombol di bawah ini.</div>
-                    <button type="button" id="btnMulaiBuatSppd" class="btn btn-primary" style="min-width: auto; padding: 10px 20px;">Buat Dokumen Baru</button>
+                    <div class="sppd-empty-title">Belum Ada Dokumen Visum</div>
+                    <div class="sppd-empty-desc">Silakan buat dokumen Visum pertama Anda dengan menekan tombol di bawah ini.</div>
+                    <button type="button" id="btnMulaiBuatSppd" class="btn btn-primary" style="min-width: auto; padding: 10px 20px;">Buat Visum Baru</button>
                 </div>
             `;
             const btnMulai = document.getElementById('btnMulaiBuatSppd');
@@ -1052,7 +1052,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentEditingSppdIndex = null;
 
     function bukaSppdModalBaru() {
-        sppdFormModalTitle.textContent = 'Buat SPPD Baru';
+        sppdFormModalTitle.textContent = 'Buat Visum Baru';
         sppdIndex.value = '';
         currentEditingSppdIndex = null;
         
