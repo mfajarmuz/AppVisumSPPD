@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Visum SPPD</title>
-    <link rel="stylesheet" href="css/style.css?v=29">
+    <link rel="stylesheet" href="css/style.css?v=30">
     <!-- jsPDF library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- html2canvas for preview -->
@@ -56,6 +56,10 @@
                     <p>Sistem Pembuatan Surat Perintah Perjalanan Dinas</p>
                 </div>
                 <div class="top-bar-actions">
+                    <span class="status-badge" id="syncStatusBadge" style="background-color: rgba(102, 126, 234, 0.08); color: var(--primary-color); margin-right: 8px;">
+                        <span class="status-dot" id="syncStatusDot" style="background-color: var(--primary-color); box-shadow: 0 0 8px var(--primary-color);"></span>
+                        <span id="syncStatusText">Mode Lokal</span>
+                    </span>
                     <span class="status-badge">
                         <span class="status-dot"></span>
                         Auto-Save & Preview Aktif
@@ -84,6 +88,18 @@
 
                         <!-- Tab 2: Settings (Pengaturan Administratif Tetap) -->
                         <div id="tab-settings" class="tab-content">
+                            <!-- Database Cloud -->
+                            <fieldset>
+                                <legend>Database Cloud (Google Sheets)</legend>
+                                <div class="form-group">
+                                    <label>URL Web App Google Apps Script:</label>
+                                    <input type="url" id="dbSheetsUrl" placeholder="https://script.google.com/macros/s/.../exec">
+                                    <span style="font-size: 0.76em; color: var(--text-muted); display: block; margin-top: 5px; line-height: 1.4;">
+                                        Tempelkan URL Web App dari Google Sheets Anda di sini. Kosongkan untuk kembali menggunakan penyimpanan lokal browser (LocalStorage).
+                                    </span>
+                                </div>
+                            </fieldset>
+
                             <!-- Kop Surat & Instansi -->
                             <fieldset>
                                 <legend>Informasi Instansi & Kop Surat</legend>
@@ -546,7 +562,7 @@
     </div>
 </div>
 
-<script src="js/pdf-generator.js?v=29"></script>
-<script src="js/app.js?v=29"></script>
+<script src="js/pdf-generator.js?v=30"></script>
+<script src="js/app.js?v=30"></script>
 </body>
 </html>

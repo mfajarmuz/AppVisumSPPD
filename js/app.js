@@ -320,14 +320,154 @@ document.addEventListener('DOMContentLoaded', () => {
         { nama: "KARPATI WANDA HIDAYAT, S.Sos., M.AP", nip: "19750612 200212 1 003", jabatan: "Pejabat Pengesah", pangkat: "Penata Tk. I (III/d)", tingkatBiaya: "Tingkat B", peran: "Pelaksana" }
     ];
 
-    // Ambil data pegawai dari LocalStorage
-    function getSavedEmployees() {
+    // Cache data pegawai di memori agar operasi UI tetap sinkron dan instan
+    let cachedEmployees = [];
+
+    // Inisialisasi cachedEmployees dari LocalStorage (fallback lokal instan)
+    function initCachedEmployees() {
         const data = localStorage.getItem('sppd_employees');
         if (!data) {
             localStorage.setItem('sppd_employees', JSON.stringify(defaultEmployees));
-            return defaultEmployees;
+            cachedEmployees = [...defaultEmployees];
+        } else {
+            cachedEmployees = JSON.parse(data);
         }
-        return JSON.parse(data);
+    }
+
+    // Ambil data pegawai (langsung dari cache memori agar operasi sinkron cepat)
+    function getSavedEmployees() {
+        return cachedEmployees;
+    }
+
+    // Simpan ke Cache, LocalStorage & picu sinkronisasi ke cloud
+    function saveEmployees(arr) {
+        cachedEmployees = [...arr];
+        localStorage.setItem('sppd_employees', JSON.stringify(arr));
+        populateQuickSelects(arr);
+        syncEmployeesToCloud();
+    }
+
+    // ==========================================
+    // SINKRONISASI CLOUD (GOOGLE SHEETS DATABASE)
+    // ==========================================
+    
+    function updateSyncStatus(status, message = '') {
+        const badge = document.getElementById('syncStatusBadge');
+        const dot = document.getElementById('syncStatusDot');
+        const text = document.getElementById('syncStatusText');
+        
+        if (!badge || !dot || !text) return;
+        
+        badge.style.display = 'inline-flex';
+        
+        if (status === 'local') {
+            badge.style.backgroundColor = 'rgba(118, 75, 162, 0.08)';
+            badge.style.color = '#764ba2';
+            dot.style.backgroundColor = '#764ba2';
+            dot.style.boxShadow = '0 0 8px #764ba2';
+            text.textContent = 'Mode Lokal';
+        } else if (status === 'syncing') {
+            badge.style.backgroundColor = 'rgba(245, 158, 11, 0.08)';
+            badge.style.color = '#d97706';
+            dot.style.backgroundColor = '#f59e0b';
+            dot.style.boxShadow = '0 0 8px #f59e0b';
+            text.textContent = message || 'Menyinkronkan...';
+        } else if (status === 'success') {
+            badge.style.backgroundColor = 'rgba(16, 185, 129, 0.08)';
+            badge.style.color = '#059669';
+            dot.style.backgroundColor = '#10b981';
+            dot.style.boxShadow = '0 0 8px #10b981';
+            text.textContent = message || 'Cloud Aktif';
+        } else if (status === 'error') {
+            badge.style.backgroundColor = 'rgba(239, 68, 68, 0.08)';
+            badge.style.color = '#dc2626';
+            dot.style.backgroundColor = '#ef4444';
+            dot.style.boxShadow = '0 0 8px #ef4444';
+            text.textContent = message || 'Gagal Sync';
+        }
+    }
+
+    function getDbUrl() {
+        const settingsData = localStorage.getItem('sppd_settings');
+        if (!settingsData) return null;
+        try {
+            const settings = JSON.parse(settingsData);
+            return settings.dbSheetsUrl || null;
+        } catch(e) {
+            return null;
+        }
+    }
+
+    // Mengambil data pegawai dari Google Sheets cloud
+    async function syncEmployeesFromCloud() {
+        const url = getDbUrl();
+        if (!url) {
+            updateSyncStatus('local');
+            return;
+        }
+
+        updateSyncStatus('syncing', 'Memuat Cloud...');
+        try {
+            const response = await fetch(`${url}?_t=${Date.now()}`);
+            if (!response.ok) throw new Error('Gagal memuat');
+            
+            const data = await response.json();
+            if (Array.isArray(data)) {
+                cachedEmployees = [...data];
+                localStorage.setItem('sppd_employees', JSON.stringify(data));
+                
+                // Render ulang UI
+                populateQuickSelects(cachedEmployees);
+                renderEmployeeTable();
+                initKPALainDefault();
+                
+                updateSyncStatus('success', 'Cloud Aktif');
+            } else {
+                throw new Error('Format data tidak valid');
+            }
+        } catch (e) {
+            console.error('Gagal mengambil data dari Google Sheets:', e);
+            updateSyncStatus('error', 'Gagal Memuat');
+            
+            // Fallback: gunakan data cache lokal jika gagal network
+            initCachedEmployees();
+            populateQuickSelects(cachedEmployees);
+            renderEmployeeTable();
+        }
+    }
+
+    // Mengirimkan data pegawai saat ini ke Google Sheets cloud
+    async function syncEmployeesToCloud() {
+        const url = getDbUrl();
+        if (!url) {
+            updateSyncStatus('local');
+            return;
+        }
+
+        updateSyncStatus('syncing', 'Menyimpan Cloud...');
+        try {
+            await fetch(url, {
+                method: 'POST',
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'text/plain'
+                },
+                body: JSON.stringify(cachedEmployees)
+            });
+            
+            updateSyncStatus('success', 'Cloud Tersinkron');
+            
+            // Kembalikan ke status hijau aktif setelah 3 detik
+            setTimeout(() => {
+                const currentUrl = getDbUrl();
+                if (currentUrl === url) {
+                    updateSyncStatus('success', 'Cloud Aktif');
+                }
+            }, 3000);
+        } catch (e) {
+            console.error('Gagal menyimpan data ke Google Sheets:', e);
+            updateSyncStatus('error', 'Gagal Menyimpan');
+        }
     }
 
     // Helper untuk menangani kompatibilitas peran pegawai lama (string) ke format baru (array)
@@ -347,12 +487,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // Jika berupa peran kustom string tunggal lama
         return [emp.peran];
-    }
-
-    // Simpan ke LocalStorage & Sync dropdown
-    function saveEmployees(arr) {
-        localStorage.setItem('sppd_employees', JSON.stringify(arr));
-        populateQuickSelects(arr);
     }
 
     // Isi pilihan dropdown pilih cepat di formulir utama & KPA
@@ -758,6 +892,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (settings.jabatanTtd) document.getElementById('jabatanTtd').value = settings.jabatanTtd;
             if (settings.namaTtd) document.getElementById('namaTtd').value = settings.namaTtd;
             if (settings.nipTtd) document.getElementById('nipTtd').value = settings.nipTtd;
+
+            // Database Cloud
+            if (settings.dbSheetsUrl) document.getElementById('dbSheetsUrl').value = settings.dbSheetsUrl;
         } catch (e) {
             console.error('Gagal memuat pengaturan:', e);
         }
@@ -773,12 +910,16 @@ document.addEventListener('DOMContentLoaded', () => {
             dikeluarkanDi: document.getElementById('dikeluarkanDi').value,
             jabatanTtd: document.getElementById('jabatanTtd').value,
             namaTtd: document.getElementById('namaTtd').value,
-            nipTtd: document.getElementById('nipTtd').value
+            nipTtd: document.getElementById('nipTtd').value,
+            dbSheetsUrl: document.getElementById('dbSheetsUrl').value.trim()
         };
         
         localStorage.setItem('sppd_settings', JSON.stringify(settings));
         alert('Pengaturan aplikasi berhasil disimpan secara permanen!');
         
+        // Pemicu sinkronisasi data pegawai setelah URL database diubah
+        syncEmployeesFromCloud();
+
         // Update preview secara langsung jika modal sedang aktif
         if (previewModal && previewModal.classList.contains('show')) {
             showPreview();
@@ -1087,12 +1228,18 @@ document.addEventListener('DOMContentLoaded', () => {
         pdfGenerator.downloadPDF(data, filename);
     }
 
-    // Inisialisasi awal list dan dropdown
-    const initialEmployees = getSavedEmployees();
-    populateQuickSelects(initialEmployees);
+    // Inisialisasi awal list, dropdown & pengaturan
+    loadSettings(); // muat settings dulu agar URL database terbaca
+    initCachedEmployees(); // inisialisasi cache dari LocalStorage
+
+    // Render awal secara instan dengan cache lokal agar UI cepat termuat
+    populateQuickSelects(cachedEmployees);
     renderEmployeeTable();
     initKPALainDefault();
-    loadSettings();
+
+    // Jalankan sinkronisasi background dari Google Sheets jika URL diatur
+    syncEmployeesFromCloud();
+
     renderSppdCardGrid();
 
     const btnSimpanPengaturan = document.getElementById('btnSimpanPengaturan');
