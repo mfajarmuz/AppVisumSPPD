@@ -1328,7 +1328,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Tampilkan dropdown saat input fokus atau diklik
         inputEl.addEventListener('focus', () => {
-            renderItems(inputEl.value);
+            renderItems(''); // Tampilkan seluruh pilihan tanpa filter saat pertama kali diklik/fokus
             listEl.style.display = 'block';
             containerEl.classList.add('open');
         });
