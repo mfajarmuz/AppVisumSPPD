@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Pejabat
             dikeluarkanDi: document.getElementById('dikeluarkanDi').value,
             tanggalDikeluarkan: document.getElementById('tanggalDikeluarkan').value,
-            jabatanTtd: document.getElementById('jabatanTtd').value,
+            jabatanTtd: 'KUASA PENGGUNA ANGGARAN',
             namaTtd: document.getElementById('namaTtd').value,
             nipTtd: document.getElementById('nipTtd').value,
 
@@ -832,7 +832,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.getElementById('namaTtd').value = emp.nama;
             document.getElementById('nipTtd').value = emp.nip;
-            document.getElementById('jabatanTtd').value = emp.jabatan;
+            document.getElementById('jabatanTtd').value = 'KUASA PENGGUNA ANGGARAN';
 
             // Update preview secara langsung jika modal sedang aktif
             if (previewModal.classList.contains('show')) {
@@ -908,7 +908,7 @@ document.addEventListener('DOMContentLoaded', () => {
             instansiAnggaran: document.getElementById('instansiAnggaran').value,
             akunAnggaran: document.getElementById('akunAnggaran').value,
             dikeluarkanDi: document.getElementById('dikeluarkanDi').value,
-            jabatanTtd: document.getElementById('jabatanTtd').value,
+            jabatanTtd: 'KUASA PENGGUNA ANGGARAN',
             namaTtd: document.getElementById('namaTtd').value,
             nipTtd: document.getElementById('nipTtd').value,
             dbSheetsUrl: document.getElementById('dbSheetsUrl').value.trim()
